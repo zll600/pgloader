@@ -36,6 +36,7 @@
                              disable-triggers
                              materialize-views
                              set-table-oids
+                             identity-columns
                              including
                              excluding)
   (:documentation
@@ -68,4 +69,3 @@
                                        create-triggers
                                        reset-sequences)
   (:documentation "Alter load duties for database sources copy support."))
-

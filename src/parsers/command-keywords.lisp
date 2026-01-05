@@ -126,6 +126,7 @@
   (def-keyword-rule "indexes")
   (def-keyword-rule "preserve")
   (def-keyword-rule "uniquify")
+  (def-keyword-rule "identity")
   (def-keyword-rule "sequences")
   (def-keyword-rule "foreign")
   (def-keyword-rule "keys")

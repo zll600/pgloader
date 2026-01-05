@@ -122,6 +122,36 @@
                                 (sqltype-name type-name)))))
       (string  type-name))))
 
+(defun identity-supported-p ()
+  "Return non-nil when identity columns are supported by the current
+   PostgreSQL target."
+  (let ((major (when *pgconn-major-version*
+                 (parse-integer *pgconn-major-version* :junk-allowed t))))
+    (and major
+         (<= 10 major)
+         (not (eq :redshift *pgconn-variant*)))))
+
+(defun normalize-identity-type-name (type-name)
+  "Map SERIAL datatypes to their base integer type for use with identity
+   columns."
+  (cond ((string-equal type-name "serial") "integer")
+        ((string-equal type-name "bigserial") "bigint")
+        ((string-equal type-name "smallserial") "smallint")
+        (t type-name)))
+
+(defun format-identity-clause (identity)
+  "Return the SQL fragment implementing IDENTITY."
+  (let* ((identity-type (if (listp identity)
+                            (or (getf identity :type) identity)
+                            identity))
+         (type-sql
+          (case identity-type
+            (:by-default "by default")
+            (:always "always")
+            (t nil))))
+    (when type-sql
+      (format nil "generated ~a as identity" type-sql))))
+
 (defmethod format-create-sql ((column column)
                               &key
                                 (stream nil)
@@ -129,16 +159,36 @@
                                 pretty-print
                                 ((:max-column-name-length max)))
   (declare (ignore if-not-exists))
-  (format stream
-          "~a~vt~a~:[~*~;~a~]~:[ not null~;~]~:[~; default ~a~]"
-          (column-name column)
-          (if pretty-print (if max (+ 3 max) 22) 1)
-          (get-column-type-name-from-sqltype column)
-          (column-type-mod column)
-          (column-type-mod column)
-          (column-nullable column)
-          (column-default column)
-          (format-default-value column)))
+  (let* ((type-name (get-column-type-name-from-sqltype column))
+         (identity    (column-identity column))
+         (identity-supported (and identity (identity-supported-p)))
+         (identity-sql (and identity-supported
+                            (format-identity-clause identity)))
+         (identity-ok (and identity-supported identity-sql))
+         (type-with-identity (if identity-ok
+                                 (normalize-identity-type-name type-name)
+                                 type-name))
+         (type-with-mod (if (column-type-mod column)
+                            (format nil "~a~a" type-with-identity
+                                    (column-type-mod column))
+                            type-with-identity))
+         (default-sql (when (and (column-default column) (not identity-ok))
+                        (format nil "default ~a"
+                                (format-default-value column)))))
+    (when (and identity (not identity-ok))
+      (log-message :warning
+                   "Identity columns requested for ~a but PostgreSQL ~a (~a) does not support them, keeping SERIAL semantics instead."
+                   (column-name column)
+                   (or *pgconn-major-version* "?")
+                   *pgconn-variant*))
+    (format stream
+            "~a~vt~a~@[ ~a~]~:[ not null~;~]~@[ ~a~]"
+            (column-name column)
+            (if pretty-print (if max (+ 3 max) 22) 1)
+            type-with-mod
+            identity-sql
+            (column-nullable column)
+            default-sql)))
 
 (defvar *pgsql-default-values*
   '((:null              . "NULL")

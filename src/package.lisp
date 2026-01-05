@@ -127,6 +127,7 @@
            #:column-comment
            #:column-transform
            #:column-extra
+           #:column-identity
            #:column-transform-default
 
            #:index-name
@@ -751,6 +752,7 @@
   (:export #:mysql-connection
            #:copy-mysql
            #:*decoding-as*
+           #:*mysql-use-identity-columns*
 	   #:*mysql-default-cast-rules*
            #:with-mysql-connection))
 
@@ -858,6 +860,7 @@
                 #:copy-mysql
                 #:mysql-connection
                 #:*decoding-as*
+                #:*mysql-use-identity-columns*
                 #:*mysql-default-cast-rules*)
   (:import-from #:pgloader.source.mssql
                 #:copy-mssql

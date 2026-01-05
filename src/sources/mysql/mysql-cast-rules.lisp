@@ -4,6 +4,9 @@
 
 (in-package :pgloader.source.mysql)
 
+(defparameter *mysql-use-identity-columns* nil
+  "When true, use PostgreSQL identity columns for MySQL AUTO_INCREMENT.")
+
 (defun enum-or-set-name (table-name column-name type ctype typemod)
   (declare (ignore type ctype typemod))
   (apply-identifier-case
@@ -276,6 +279,10 @@
                                               (find-package "KEYWORD"))
                                 :source-def ctype
                                 :extra (explode-mysql-enum ctype))))))
+
+      (when (and *mysql-use-identity-columns*
+                 (eq :auto-increment (column-extra pgcol)))
+        (setf (column-identity pgcol) :by-default))
 
       ;; extra triggers
       ;;

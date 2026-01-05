@@ -27,13 +27,15 @@
 			    reset-sequences
                             materialize-views
                             set-table-oids
+                            identity-columns
                             including
                             excluding)
-  "Copy the contents of the COPY formated file to PostgreSQL."
+  "Copy the contents of the COPY formatted file to PostgreSQL."
   (declare (ignore data-only schema-only
                    create-tables include-drop foreign-keys
                    create-indexes reset-sequences materialize-views
                    set-table-oids including excluding))
+  (declare (ignore identity-columns))
 
   (let* ((*on-error-stop* on-error-stop)
          (pgconn (target-db copy))

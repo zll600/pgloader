@@ -9,6 +9,9 @@
   or :redshift. The value is parsed from SELECT version(); and set in the
   pgsql-connection instance at open-connection time.")
 
+(defparameter *pgconn-major-version* nil
+  "The PostgreSQL server major version as parsed from SELECT version().")
+
 ;;;
 ;;; PostgreSQL Tools connecting to a database
 ;;;
@@ -230,7 +233,8 @@
   (let ((conn (gensym "pgsql-conn")))
     `(with-connection (,conn ,pgconn)
        (let ((pomo:*database*  (conn-handle ,conn))
-             (*pgconn-variant* (pgconn-variant ,conn)))
+             (*pgconn-variant* (pgconn-variant ,conn))
+             (*pgconn-major-version* (pgconn-major-version ,conn)))
          (handling-pgsql-notices
            ,@forms)))))
 

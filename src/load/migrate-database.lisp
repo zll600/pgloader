@@ -302,10 +302,12 @@
 			    including
 			    excluding
                             set-table-oids
+                            identity-columns
                             alter-table
                             alter-schema
 			    materialize-views)
   "Export database source data and Import it into PostgreSQL"
+  (declare (ignore identity-columns))
   (log-message :log "Migrating from ~a" (source-db copy))
   (log-message :log "Migrating into ~a" (target-db copy))
   (let* ((*on-error-stop* on-error-stop)

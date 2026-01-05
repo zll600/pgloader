@@ -81,7 +81,7 @@
 ;;; source is.
 ;;;
 (defstruct column table name type-name type-mod nullable default comment
-           transform extra (transform-default t))
+           transform extra identity (transform-default t))
 
 ;;;
 ;;; Index and Foreign Keys
@@ -507,4 +507,3 @@
                      (pgloader.pgsql:pgsql-execute sql)))
                (table-name ,table-name))))
        ,@body)))
-

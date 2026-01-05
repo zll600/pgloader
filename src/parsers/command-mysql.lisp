@@ -28,6 +28,7 @@
 			  option-create-tables
 			  option-create-indexes
 			  option-index-names
+                          option-identity-columns
 			  option-reset-sequences
 			  option-foreign-keys
 			  option-identifiers-case))
@@ -173,15 +174,17 @@
                                            ((:excluding excl))
                                            ((:decoding decoding-as))
                                            &allow-other-keys)
-  `(lambda ()
-     (let* ((*default-cast-rules* ',*mysql-default-cast-rules*)
-            (*cast-rules*         ',casts)
-            (*decoding-as*        ',decoding-as)
-            (*mysql-settings*     ',mysql-gucs)
-            (on-error-stop        (getf ',options :on-error-stop t))
-            ,@(pgsql-connection-bindings pg-db-conn gucs)
-            ,@(batch-control-bindings options)
-            ,@(identifier-case-binding options)
+     `(lambda ()
+        (let* ((*default-cast-rules* ',*mysql-default-cast-rules*)
+               (*cast-rules*         ',casts)
+               (*decoding-as*        ',decoding-as)
+               (*mysql-settings*     ',mysql-gucs)
+               (*mysql-use-identity-columns*
+                (getf ',options :identity-columns))
+               (on-error-stop        (getf ',options :on-error-stop t))
+               ,@(pgsql-connection-bindings pg-db-conn gucs)
+               ,@(batch-control-bindings options)
+               ,@(identifier-case-binding options)
             (source
              (make-instance 'copy-mysql
                             :target-db ,pg-db-conn
@@ -199,7 +202,9 @@
                       :distribute ',distribute
                       :set-table-oids t
                       :on-error-stop on-error-stop
-                      ,@(remove-batch-control-option options))
+                      :identity-columns *mysql-use-identity-columns*
+                      ,@(remove-batch-control-option options
+                                                     :extras '(:identity-columns)))
 
        ,(sql-code-block pg-db-conn :post after "after load"))))
 
@@ -230,4 +235,3 @@
                                                :including including
                                                :excluding excluding
                                                :decoding decoding))))))
-

@@ -138,6 +138,9 @@
 (make-option-rule reset-sequences  (and kw-reset  (? kw-no) kw-sequences))
 (make-option-rule foreign-keys     (and (? kw-no) kw-foreign kw-keys))
 
+(defrule option-identity-columns (and kw-identity kw-columns)
+  (:constant (cons :identity-columns t)))
+
 (defrule option-drop-schema (and kw-drop kw-schema)
   (:constant (cons :drop-schema t)))
 
